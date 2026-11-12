@@ -1,0 +1,144 @@
+# Written by CodeMD (codemd.dev) on its own branch to run tests.
+name: CodeMD test run
+'on':
+  push:
+    branches:
+    - codemd-test-runs
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      UV_NO_SYNC: true
+      INLINE_SNAPSHOT_DEFAULT_FLAGS: review
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version-file: base/.python-version
+    - uses: astral-sh/setup-uv@v6
+      with:
+        version: latest-known
+        enable-cache: true
+    - name: 'CodeMD: install dependencies'
+      working-directory: ${{ github.workspace }}
+      run: |
+        pip install uv
+        uv sync --all-extras || uv sync
+        if [ -d src ] && [ -n "$(find src -maxdepth 2 -name __init__.py -print -quit)" ]; then
+          echo "PYTHONPATH=$PWD/src${PYTHONPATH:+:$PYTHONPATH}" >> "$GITHUB_ENV"
+        fi
+    - name: 'CodeMD test 1/20: docs_src/app_testing/app_a/test_main.py'
+      working-directory: ${{ github.workspace }}
+      run: bash .codemd/run-test.sh 0
+      timeout-minutes: 10
+      continue-on-error: true
+    - name: 'CodeMD test 2/20: docs_src/app_testing/app_a/test_main.py'
+      working-directory: ${{ github.workspace }}
+      run: bash .codemd/run-test.sh 1
+      timeout-minutes: 10
+      continue-on-error: true
+    - name: 'CodeMD test 3/20: docs_src/app_testing/app_b/test_main.py'
+      working-directory: ${{ github.workspace }}
+      run: bash .codemd/run-test.sh 2
+      timeout-minutes: 10
+      continue-on-error: true
+    - name: 'CodeMD test 4/20: docs_src/app_testing/app_b/test_main.py'
+      working-directory: ${{ github.workspace }}
+      run: bash .codemd/run-test.sh 3
+      timeout-minutes: 10
+      continue-on-error: true
+    - name: 'CodeMD test 5/20: docs_src/app_testing/app_b_non_an/test_main.py'
+      working-directory: ${{ github.workspace }}
+      run: bash .codemd/run-test.sh 4
+      timeout-minutes: 10
+      continue-on-error: true
+    - name: 'CodeMD test 6/20: docs_src/app_testing/app_b_non_an/test_main.py'
+      working-directory: ${{ github.workspace }}
+      run: bash .codemd/run-test.sh 5
+      timeout-minutes: 10
+      continue-on-error: true
+    - name: 'CodeMD test 7/20: docs_src/async_tests/app_a/test_main.py'
+      working-directory: ${{ github.workspace }}
+      run: bash .codemd/run-test.sh 6
+      timeout-minutes: 10
+      continue-on-error: true
+    - name: 'CodeMD test 8/20: docs_src/async_tests/app_a/test_main.py'
+      working-directory: ${{ github.workspace }}
+      run: bash .codemd/run-test.sh 7
+      timeout-minutes: 10
+      continue-on-error: true
+    - name: 'CodeMD test 9/20: docs_src/settings/app02/test_main.py'
+      working-directory: ${{ github.workspace }}
+      run: bash .codemd/run-test.sh 8
+      timeout-minutes: 10
+      continue-on-error: true
+    - name: 'CodeMD test 10/20: docs_src/settings/app02/test_main.py'
+      working-directory: ${{ github.workspace }}
+      run: bash .codemd/run-test.sh 9
+      timeout-minutes: 10
+      continue-on-error: true
+    - name: 'CodeMD test 11/20: docs_src/settings/app02_non_an/test_main.py'
+      working-directory: ${{ github.workspace }}
+      run: bash .codemd/run-test.sh 10
+      timeout-minutes: 10
+      continue-on-error: true
+    - name: 'CodeMD test 12/20: docs_src/settings/app02_non_an/test_main.py'
+      working-directory: ${{ github.workspace }}
+      run: bash .codemd/run-test.sh 11
+      timeout-minutes: 10
+      continue-on-error: true
+    - name: 'CodeMD test 13/20: tests/test_compat.py'
+      working-directory: ${{ github.workspace }}
+      run: bash .codemd/run-test.sh 12
+      timeout-minutes: 10
+      continue-on-error: true
+    - name: 'CodeMD test 14/20: tests/test_concurrency.py'
+      working-directory: ${{ github.workspace }}
+      run: bash .codemd/run-test.sh 13
+      timeout-minutes: 10
+      continue-on-error: true
+    - name: 'CodeMD test 15/20: scripts/tests/test_remove_unused_docs_src.py'
+      working-directory: ${{ github.workspace }}
+      run: bash .codemd/run-test.sh 14
+      timeout-minutes: 10
+      continue-on-error: true
+    - name: 'CodeMD test 16/20: tests/test_prepare_release.py'
+      working-directory: ${{ github.workspace }}
+      run: bash .codemd/run-test.sh 15
+      timeout-minutes: 10
+      continue-on-error: true
+    - name: 'CodeMD test 17/20: scripts/tests/test_remove_unused_docs_src.py'
+      working-directory: ${{ github.workspace }}
+      run: bash .codemd/run-test.sh 16
+      timeout-minutes: 10
+      continue-on-error: true
+    - name: 'CodeMD test 18/20: tests/test_concurrency.py'
+      working-directory: ${{ github.workspace }}
+      run: bash .codemd/run-test.sh 17
+      timeout-minutes: 10
+      continue-on-error: true
+    - name: 'CodeMD test 19/20: tests/test_frontend.py'
+      working-directory: ${{ github.workspace }}
+      run: bash .codemd/run-test.sh 18
+      timeout-minutes: 10
+      continue-on-error: true
+    - name: 'CodeMD test 20/20: tests/test_prepare_release.py'
+      working-directory: ${{ github.workspace }}
+      run: bash .codemd/run-test.sh 19
+      timeout-minutes: 10
+      continue-on-error: true
+    - name: 'CodeMD: determine test result'
+      if: always()
+      working-directory: ${{ github.workspace }}
+      run: bash .codemd/run-test.sh finalize
+    - name: 'CodeMD: keep coverage reports'
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: codemd-coverage-reports
+        path: codemd-reports
+        if-no-files-found: ignore
+        retention-days: 90
